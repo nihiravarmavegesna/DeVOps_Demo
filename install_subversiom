@@ -1,0 +1,33 @@
+httpd-2.2.15-69.el6.centos.x86_64.rpm
+httpd-tools-2.2.15-69.el6.centos.x86_64.rpm
+mod_dav_svn-1.6.11-15.el6_7.x86_64.rpm
+subversion-1.6.11-15.el6_7.x86_64.rpm
+============================================
+sudo yum install *.rpm
+vi /etc/httpd/conf.d/subversion.conf 
+============================
+<Location /svn>
+   DAV svn
+   SVNParentPath /var/www/svn
+
+   # Limit write permission to list of valid users.
+   <LimitExcept GET PROPFIND OPTIONS REPORT>
+      # Require SSL connection for password protection.
+      # SSLRequireSSL
+
+      AuthType Basic
+      AuthName "Subversion repositories"
+      AuthUserFile /etc/svn-auth-users
+      Require valid-user
+   </LimitExcept>
+</Location>
+===========================
+cd /etc/
+htpasswd -cm /etc/svn-auth-users testuser
+mkdir /var/www/svn
+cd /var/www/svn
+svnadmin create testrepo
+chown -R apache:apache testrepo
+sudo service httpd start
+sudo service svnserve restart
+===============================
