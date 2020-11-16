@@ -84,6 +84,6 @@
             <name>maven-snapshots</name>
             <url>http://ec2-3-133-159-253.us-east-2.compute.amazonaws.com:8081/repository/maven-snapshots/</url>
         </snapshotRepository>
-     <distributionManagement>
+     </distributionManagement>
 
 </project>
