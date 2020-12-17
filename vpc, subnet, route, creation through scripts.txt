@@ -1,0 +1,59 @@
+
+#!/bin/bash
+#create VPC
+aws ec2 create-vpc  --cidr-block 10.116.0.0/16  --output text > vpc.txt
+#created variable VPC to holds the value for VPC. 
+VPC=$(cat vpc.txt | awk '{print $8}')
+aws ec2 modify-vpc-attribute --vpc-id ${VPC}  --enable-dns-hostnames "{\"Value\":true}"
+# create subnet
+aws ec2 create-subnet --vpc-id ${VPC} --cidr-block 10.116.10.0/24 > subnet.txt
+SUBNET=$(cat subnet.txt | grep -i SubnetId |cut -d ':' -f 2 | tr -d '"' | tr -d ',')
+aws ec2 modify-subnet-attribute --subnet-id ${SUBNET} --map-public-ip-on-launch
+#create internet gateway
+aws ec2 create-internet-gateway > internet.txt
+IGT=$(cat internet.txt | grep -i InternetGatewayId | cut -d ":" -f 2 | tr -d '"')
+aws ec2 attach-internet-gateway --internet-gateway-id ${IGT} --vpc-id ${VPC}
+#Create Routing table
+aws ec2 create-route-table --vpc-id ${VPC} > route.txt
+ROUTE=$(cat route.txt | grep -i RouteTableId | cut -d ":" -f 2 | tr -d '"' |tr -d ',')
+aws ec2 create-route --route-table-id ${ROUTE} --destination-cidr-block 0.0.0.0/0 --gateway-id ${IGT}
+aws ec2 associate-route-table --route-table-id ${ROUTE} --subnet-id ${SUBNET}
+###############################################################################
+aws ec2 create-security-group --group-name veera_ALLOW_ALL --description "veera_sec" --vpc-id ${VPC} > security.txt
+SECURITY=$(cat security.txt | grep -i sg-052bb4729223e5d8a | cut -d ":" -f 2 | tr -d '"')
+aws ec2 authorize-security-group-ingress --group-id ${SECURITY} --protocol tcp --cidr 0.0.0.0/0 --port 0-65535
+######################################################################################
+aws ec2 run-instances --image-id ami-09558250a3419e7d0 --instance-type t2.micro --count 5 --subnet-id ${SUBNET} --key-name http --security-group-ids ${SECURITY} --credit-specification CpuCredits=unlimited
+
+
+
+#!/bin/bash
+#create vpc
+aws ec2 create-vpc  --cidr-block 10.143.0.0/16   --output text > vpc.txt
+#created vpc to holds the value for vpc
+VPC=$(cat vpc.txt | awk '{print $8}')
+aws ec2 modify-vpc-attribute --vpc-id ${VPC}  --enable-dns-hostnames "{\"Value\":true}"
+#create subnet
+aws ec2 create-subnet --vpc-id ${VPC} --cidr-block 10.10.10.0/24 > subnet.txt
+SUBNET=$(cat subnet.txt | grep -i SubnetId | cut -d ':' -f 2 | tr -d '"' | tr -d ',')
+aws ec2 modify-subnet-attribute --subnet-id ${SUBNET} --map-public-ip-on-launch
+#create internet gateway
+aws ec2 create-internet-gateway > internet.txt
+ING=$(cat internet.txt | grep -i InternetGatewayId | cut -d ':' -f 2 | tr -d '"' | tr -d ',')
+aws ec2 attach-internet-gateway --internet-gateway-id ${ING} --vpc-id ${VPC}
+#create routing table
+aws ec2 create-route-table --vpc-id ${VPC} > route.txt
+ROUTE=$(cat route.txt | grep -i RouteTableId | cut -d ':' -f 2 | tr -d '"' | tr -d ',')
+aws ec2 create-route --route-table-id ${ROUTE} --destination-cidr-block 0.0.0.0/0 --gateway-id ${ING}
+aws ec2 associate-route-table --route-table-id rtb-081461c40529f4160 --subnet-id subnet-0778ca4080ae95acf
+
+
+
+
+
+
+
+
+
+
+
